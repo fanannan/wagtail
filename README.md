@@ -1,10 +1,10 @@
 # wagtail
 
-Experimental online classifiers implemented in clojure.
+Experimental on-line classifiers implemented in Clojure.
 
 ## Usage
 
-The following online classifiers are implenteed under the same framework.
+The following on-line classifiers are implenteed under the same framework.
 
  * Mergin perceptron
  * Passive agressive/I/II

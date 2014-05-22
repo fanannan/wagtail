@@ -1,7 +1,6 @@
 (ns wagtail.classifier.cw
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
-            [wagtail.math :as wm]
             [wagtail.classifier.scw :as scw]))
 
 
@@ -19,7 +18,7 @@
   (if (pos? (shared/margin mu feature label)) 0 1))
 
 (defn cw-updater
-  [{:keys [loss-fn] :as config},
+  [config,
    {:keys [mu, sigma, r] :as variables},
    feature, label]
   (let [beta (calc-beta sigma r feature)
@@ -35,7 +34,9 @@
          :sigma (cl/eye num-fields)}))
 
 (def cw-config
-  {:validator-fn (fn[{:keys [r]}] (> r 0.0))
-   :initializer-fn cw-initialzer
-   :updater-fn cw-updater
-   :loss-fn calc-loss})
+  {:model-type :classification,
+   :validator-fn (fn[{:keys [r]}] (> r 0.0)),
+   :initializer-fn cw-initialzer,
+   :updater-fn cw-updater,
+   :loss-fn calc-loss,
+   :weight-name :mu})

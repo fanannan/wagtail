@@ -2,18 +2,17 @@
     (:require [clatrix.core :as cl]))
 
 
-;; model specific variable names
+;; commonly used initialization
 
-(defn get-weight-name
-  [model-type]
-  (case model-type
-    :Perceptron :w
-    :PA :w
-    :PA-I :w
-    :PA-II :w
-    :CW :mu
-    :SCW-I :mu
-    :Fast-SCW :mu))
+(defn weight-initialzer
+  [config, variables, num-fields]
+  (into variables
+        {(:weight-name config) (cl/zeros num-fields)}))
+
+(defn weight-t-initialzer
+  [config, variables, num-fields]
+  (into (weight-initialzer config variables num-fields)
+        {:t 1}))
 
 
 ;; commonly used formulae
@@ -36,7 +35,7 @@
   [w, feature, label]
   (* label (estimate w feature)))
 
-(defn predict
+(defn classify
   "Calculate the classification result and returns 1 or -1"
   ; sign(WtXt) <-> Yt
   [w, feature]
@@ -51,11 +50,15 @@
 (defn update
   "Execute the update process in a training algorithm.
    Returns a hash map with the updated variables (ex: weight vector)"
-  [{:keys [loss-fn, updater-fn] :as config}, variables, feature, label]
-  (let [loss (loss-fn config variables feature label)]
-    (if (not (pos? loss))
-      variables
-      (updater-fn config variables feature label))))
+  [{:keys [loss-fn, updater-fn, unupdater-fn] :as config}, variables, feature, label]
+  (if (nil? loss-fn)
+      (updater-fn config variables feature label)
+    (let [loss (loss-fn config variables feature label)]
+      (if (not (pos? loss))
+        (if (nil? unupdater-fn)
+          variables
+          (unupdater-fn config variables feature label))
+        (updater-fn config variables feature label)))))
 
 (defn trainer
   "Execute online learning record by record.
@@ -75,10 +78,12 @@
 
 (defn train-model
   "Train a model and returns the result variables (ex: weight vector)."
-  [{:keys [validator-fn, initializer-fn] :as config},
+  [{:keys [model-type, validator-fn, initializer-fn] :as config},
    {:keys [iterations] :as variables},
    features, labels]
   (assert (validator-fn variables))
+  ; 回帰ならバイアス項を追加する
+  ;;
   (let [num-features (count (first features))
         initial-variables (initializer-fn config variables num-features)]
        (looper iterations
@@ -94,6 +99,9 @@
 (defn run-model
   "Run a model and return the predictions.
    Returns a list with vectors of a feature and a prediction."
-  [model-type, variables, features]
-  (let [w (get variables (get-weight-name model-type))]
-    (map (fn[feature] [feature (predict w feature)]) features)))
+  [config, variables, features]
+  (let [w ((:weight-name config) variables)
+        f (case (:model-type config)
+            :classification classify
+            :regression estimate)]
+    (map (fn[feature] [feature (f w feature)]) features)))

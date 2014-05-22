@@ -1,14 +1,14 @@
 (ns wagtail.classifier.scw
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
-            [wagtail.math :as wm]))
+            [wagtail.math :as wmath]))
 
 
 ;; soft confidence weighted learning
 ;; based on "Exact Soft Confidence-Weighted Learning" by J Wang, P Zhao and S C H Hoi, 2012.
 
 (defn calc-phi [eta]
-  (wm/probit eta))
+  (wmath/probit eta))
 
 (defn calc-psi [eta]
   (let [p (calc-phi eta)]
@@ -55,7 +55,7 @@
           (shared/margin mu feature label))))
 
 (defn scw-updater
-  [{:keys [loss-fn, alpha-fn] :as config},
+  [{:keys [alpha-fn] :as config},
    {:keys [mu, sigma, phi, psi, zeta, c] :as variables},
    feature, label]
   (let [alpha (alpha-fn mu sigma phi psi zeta c feature label)
@@ -73,10 +73,12 @@
          :psi (calc-psi eta),
          :zeta (calc-zeta eta)}))
 
-(def scw-config
-  {:validator-fn (fn [{:keys [c, eta, iterations]}]
+(def scw1-config
+  {:model-type :classification
+   :validator-fn (fn [{:keys [c, eta, iterations]}]
                    (and (> c 0.0)(> 1.0 eta 0.5)(> iterations 0))),
    :initializer-fn scw-initialzer,
    :updater-fn scw-updater,
-   :alpha-fn calc-alpha-I
-   :loss-fn calc-loss})
+   :alpha-fn calc-alpha-I,
+   :loss-fn calc-loss,
+   :weight-name :mu})

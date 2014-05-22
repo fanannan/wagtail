@@ -26,17 +26,13 @@
         {:w (cl/* (- 1.0 (/ 1.0 t)) w),
          :t (inc t)}))
 
-(defn pegasos-svm-initialzer
-  [config, variables, num-fields]
-  (into variables
-        {:w (cl/zeros num-fields),
-         :t 1}))
-
 (def pegasos-svm-config
-  {:validator-fn (fn[{:keys [lambda, iterations]}]
+  {:model-type :classification,
+   :validator-fn (fn[{:keys [lambda, iterations]}]
                    (and (> 1.0 lambda 0.0)
                         (> iterations 0))),
-   :initializer-fn pegasos-svm-initialzer,
+   :initializer-fn shared/weight-t-initialzer,
    :updater-fn pegasos-svm-updater,
    :unupdater-fn pegasos-svm-unupdater,
-   :loss-fn calc-loss})
+   :loss-fn calc-loss,
+   :weight-name :w})

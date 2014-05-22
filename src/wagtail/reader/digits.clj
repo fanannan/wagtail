@@ -17,7 +17,7 @@
 
 (def train-digits (load-digits "./resources/digits_train.csv"))
 (def test-digits (load-digits "./resources/digits_test.csv"))
-(def digits [train-digits test-digits])
+(def data [train-digits test-digits])
 
 (defn prepare-digits [data]
   (:records data))

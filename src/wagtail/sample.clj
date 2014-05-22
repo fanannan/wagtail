@@ -25,7 +25,7 @@
 (def linear-reg
   {:model-name "Linear-Regression",
    :config linear-regression/linear-regression-config,
-   :variables {:learning-rate 0.000005, :iterations 100000}})
+   :variables {:learning-rate 0.000005, :iterations 100}})
 
 ; logistic regression
 (def logistic-reg
@@ -96,14 +96,18 @@
    :records death-rates/data,
    :train-ratio 0.6})
 
+(def scaled-death-rate-data
+  (into death-rate-data
+        {:scale {:method :simple :limit 0.98}}))
 
 ;; run samples
 
 (defn run-samples []
   (doall
-   (for [model [perceptron pa pa1 pa2 cw scw1 pegasos-svm]
-         data [iris-data digits-data]]
-     (performance/check-performance model data true))
-   (for [model [linear-reg];, logistic-reg]; [pa-reg]
-         data [death-rate-data]]
-     (performance/check-performance model data true))))
+   (do
+     (for [model [perceptron pa pa1 pa2 cw scw1 pegasos-svm]
+           data [iris-data digits-data]]
+       (performance/check-performance model data true))
+     (for [model [linear-reg];, logistic-reg]; [pa-reg]
+           data [scaled-death-rate-data death-rate-data]]
+       (performance/check-performance model data true)))))

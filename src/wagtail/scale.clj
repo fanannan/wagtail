@@ -3,7 +3,7 @@
 (binding [*warn-on-reflection* false]
   (use '[incanter.stats :only [quantile] :as stats]))
 
-(defn stat
+(defn stat-item
  "Statistics info of the given number sequence.
   xs: number sequence
   limit: percentile applied to the number sequence"
@@ -22,15 +22,13 @@
   [xys]
   (apply mapv vector xys))
 
-(defn field-stat
- "統計情報の作成
-  records: データレコードの束
-  field-keys: 統計情報作成対象項目のセット
-  limit: パーセンタイル値の適用水準
-  number-of-records: 対象レコード数(nilなら全部)"
-  [records, limit, number-of-records]
-  {:pre [(every? map? records)(< 0.0 limit 1.0)]}
-  (mapv (fn[xs] (stat xs limit))
+(defn stat
+ "Make statistic info of each featuer item of the given records
+  records: a collection of data records (a vector of vectors)
+  limit: percentile position used for :bound and :zero-bound methods"
+  [records, limit]
+  {:pre [(every? vector? records)(< 0.0 limit 1.0)]}
+  (mapv (fn[xs] (stat-item xs limit))
         (transpose records)))
 
 (defn mp
@@ -49,32 +47,31 @@
   (/ (+ x 1.0) 2.0))
 
 (defn unscale-item
- "データ項目のアンスケーリングを行う
-  value: 対象データ項目の値
-  stat: 統計情報
-  method-key: スケーリング方法"
+ "Unscale a value from -1..+1 range
+  value: value of a scaled data item
+  statm: stat info given by function 'stat'
+  method-key: scaling method"
   [value, statm, method-key]
   {:pre [(number? value)(map? statm)(keyword? method-key)]}
-  (let [iv (imp value)
-        {:keys [max, min, upper-bound, lower-bound]} statm]
+  (let [{:keys [max, min, upper-bound, lower-bound]} statm]
     (case method-key
       :raw             value
-      :simple          (+ (* iv (- max min)) min)
-      :bounded         (+ (* iv (- upper-bound lower-bound)) lower-bound)
+      :simple          (+ (* (imp value) (- max min)) min)
+      :bounded         (+ (* (imp value) (- upper-bound lower-bound)) lower-bound)
       :zero-bounded    (if (pos? value)
                               (* value upper-bound)
                               (* value lower-bound)))))
 
 (defn- scale-item
- "データ項目のスケーリングを行う
-  field-key: 対象データ項目を示すキーワード
-  value: 対象データ項目の値
-  stat: 統計情報
-  method-key: スケーリング方法"
+ "Scale an data item within the range of -1..+1
+  value: value of a data item
+  statm: stat info given by function 'stat'
+  method-key: scaling method"
   [value, statm, method-key]
   {:pre [(number? value)(map? statm)(keyword? method-key)]}
   (let [{:keys [max, min, upper-bound, lower-bound]} statm]
-    (if (= upper-bound lower-bound)
+    (if (and (= upper-bound lower-bound)
+             (or (= method-key :bounded)(= method-key :zero-bounded)))
       Double/NaN
       (case method-key
         :raw             value
@@ -84,30 +81,28 @@
                              (/ value upper-bound)
                              (/ value lower-bound))))))
 
-(defn- scale-items
- "データ項目のスケーリングを行う
-  record: 対象データレコード
-  stat: 統計情報
-  method-key: スケーリング方法"
+(defn- scale-record
+ "Scale a record of numerical values
+  record: a vector of numerical values
+  stat: a vector of stat info given by function 'stat'
+  method-key: scaling method"
   [record, stat, method-key]
-  {:pre [(vector? record)(every? map? stat)(keyword? method-key)]}
   (mapv (fn[v m] (scale-item v m method-key))
         record
         stat))
 
 (defn scale
- "データ全体のスケーリングを行う
-  records: 対象データレコード全体
-  stat: 統計情報
-  method-key: スケーリング方法"
+ "Scale a collection of records.
+  records: a vector of vectors.
+  stat: a vector of stat info given by function 'stat'
+  method-key: scaling method"
   [records, stat, method-key]
-  {:pre [(coll? records)(every? map? stat)(keyword? method-key)]}
-  (mapv #(scale-fields % stat method-key) records))
+  {:pre [(every? vector? records)(every? map? stat)(keyword? method-key)]}
+  (mapv #(scale-record % stat method-key) records))
 
 
-(def x (stat (range 500) 0.9))
-(unscale-item 30 x :raw)
-(unscale-item (scale-item 30 x :raw) x :raw)
-(unscale-item (scale-item 30 x :simple) x :simple)
-(unscale-item (scale-item 30 x :bounded) x :bounded)
-(unscale-item (scale-item 30 x :zero-bounded) x :zero-bounded)
+;(def x (stat (range 4000) 0.91))
+;(unscale-item (scale-item 3000 x :raw) x :raw)
+;(unscale-item (scale-item 3000 x :simple) x :simple)
+;(unscale-item (scale-item 3000 x :bounded) x :bounded)
+;(unscale-item (scale-item 3000 x :zero-bounded) x :zero-bounded)

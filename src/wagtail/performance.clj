@@ -1,7 +1,7 @@
 (ns wagtail.performance
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
-            [wagtail.reader.data-handler :as data-handler]))
+            [wagtail.data-handler :as data-handler]))
 
 
 (defn result-checker
@@ -20,7 +20,7 @@
 (defn check-performance
   "Train and run a model with the specified model and data"
   [{:keys [model-name, config, variables]},
-   {:keys [data-type] :as data}, verbose]
+   {:keys [data-type, scale] :as data}, verbose]
   (let [[[train-features, train-labels]
          [test-features, test-labels]] (data-handler/prepare-data config data)
         learner (shared/make-learner config)
@@ -30,10 +30,11 @@
     (when verbose
       (println "model: " (:model-type config) model-name)
       (println "data:  " data-type)
+      (when-not (nil? scale) (println "scale: " scale))
       (println "train performance: " train-p)
       (println "test performance: " test-p "\n")
-      (println "train results:" train-r)
-      (println "test results: " test-r)
+      #_(println "train results:" train-r)
+      #_(println "test results: " test-r)
       (println "weights: " trained-variables)
       )
     [[train-r train-p] [test-r test-p]]))

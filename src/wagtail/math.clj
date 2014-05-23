@@ -1,5 +1,7 @@
 (ns wagtail.math
   (:import [org.apache.commons.math3.special Erf]))
+(binding [*warn-on-reflection* false]
+  (use '[incanter.stats :only [quantile] :as stats]))
 
 (defn probit
   "inverse function of cumulative normal distribution function"
@@ -20,3 +22,14 @@
 	      mean (/ (reduce + xs) n)
 	      intermediate (map #(Math/pow (- %1 mean) 2) xs)]
     (Math/sqrt (/ (reduce + intermediate) n))))
+
+(defn correl
+  [xs ys]
+  (incanter.stats/correlation xs ys))
+
+(defn mse
+  [xs ys]
+  (assert (= (count xs)(count ys)))
+  (/ (apply + (map (fn[x y](* (- x y)(- x y))) xs ys))
+     (count xs)))
+

@@ -1,7 +1,8 @@
 (ns wagtail.performance
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
-            [wagtail.data-handler :as data-handler]))
+            [wagtail.data-handler :as data-handler]
+            [wagtail.math :as wmath]))
 
 
 (defn result-checker
@@ -10,31 +11,44 @@
 
 (defn run
   "Returns the results and the rate of corrects prediction."
-  [config, trained-variables, features, labels]
+  [config, scale, label-stat, trained-variables, features, labels]
   (let [results (map result-checker
-                     (shared/run-model config trained-variables features) labels)
-        corrects (count (filter first results))
-        performance (float (/ corrects (count results)))]
-    [results performance]))
+                     (shared/run-model config scale label-stat trained-variables features) labels)
+        predictions (map second results)]
+    [results
+     {:performance (float (/ (count (filter first results)) (count results)))
+      :correlation (wmath/correl predictions labels)
+      :mse (wmath/mse predictions labels)}]))
 
 (defn check-performance
   "Train and run a model with the specified model and data"
   [{:keys [model-name, config, variables]},
    {:keys [data-type, scale] :as data}, verbose]
   (let [[[train-features, train-labels]
-         [test-features, test-labels]] (data-handler/prepare-data config data)
+         [test-features, test-labels]
+         stat] (data-handler/prepare-data config data)
+        [feature-stat label-stat] stat
         learner (shared/make-learner config)
         trained-variables (learner variables train-features train-labels)
-        [train-r train-p] (run config trained-variables train-features train-labels)
-        [test-r test-p] (run config trained-variables test-features test-labels)]
+        [train-r train-p] (run config scale label-stat trained-variables train-features train-labels)
+        [test-r test-p] (run config scale label-stat trained-variables test-features test-labels)]
     (when verbose
       (println "model: " (:model-type config) model-name)
       (println "data:  " data-type)
       (when-not (nil? scale) (println "scale: " scale))
-      (println "train performance: " train-p)
-      (println "test performance: " test-p "\n")
-      (println "train results:" train-r)
-      #_(println "test results: " test-r)
-      (println "weights: " trained-variables)
+      (case (:model-type config)
+        :classification
+        (do
+          (println "train performance: " (:performance train-p))
+          (println "test  performance: " (:performance test-p) "\n"))
+        :regression
+        (do
+          (println "train correlation: " (:correlation train-p))
+          (println "test  correlation: " (:corelation test-p) "\n")
+          (println "train mse:         " (:mse train-p))
+          (println "test  mse:         " (:mse test-p) "\n")))
+      #_(println "train results:" train-r)
+      (println "test results: " test-r)
+      #_(println "weights: " trained-variables)
       )
     [[train-r train-p] [test-r test-p]]))

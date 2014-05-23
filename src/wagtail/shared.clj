@@ -1,5 +1,6 @@
 (ns wagtail.shared
-    (:require [clatrix.core :as cl]))
+    (:require [clatrix.core :as cl]
+              [wagtail.scale :as scale]))
 
 
 ;; commonly used initialization
@@ -80,14 +81,14 @@
   "Train a model and returns the result variables (ex: weight vector)."
   [{:keys [model-type, validator-fn, initializer-fn] :as config},
    {:keys [iterations] :as variables},
-   features, labels]
+   scaled-features, scaled-labels]
   (assert (validator-fn variables))
   ; 回帰ならバイアス項を追加する
   ;;
-  (let [num-features (count (first features))
+  (let [num-features (count (first scaled-features))
         initial-variables (initializer-fn config variables num-features)]
        (looper iterations
-               (fn[variables] (trainer config variables features labels))
+               (fn[variables] (trainer config variables scaled-features scaled-labels))
                initial-variables)))
 
 (defn make-learner [config]
@@ -99,9 +100,13 @@
 (defn run-model
   "Run a model and return the predictions.
    Returns a list with vectors of a feature and a prediction."
-  [config, variables, features]
+  [config, {:keys [method] :as scale}, label-stat, variables, scaled-features]
   (let [w ((:weight-name config) variables)
+        us (if (nil? scale)
+            identity
+            (fn[value] (scale/unscale-item value (first label-stat) method)))
         f (case (:model-type config)
             :classification classify
             :regression estimate)]
-    (map (fn[feature] [feature (f w feature)]) features)))
+    (map (fn[scaled-feature] [scaled-feature (us (f w scaled-feature))])
+         scaled-features)))

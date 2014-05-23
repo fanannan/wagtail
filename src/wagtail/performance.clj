@@ -33,7 +33,7 @@
       (when-not (nil? scale) (println "scale: " scale))
       (println "train performance: " train-p)
       (println "test performance: " test-p "\n")
-      #_(println "train results:" train-r)
+      (println "train results:" train-r)
       #_(println "test results: " test-r)
       (println "weights: " trained-variables)
       )

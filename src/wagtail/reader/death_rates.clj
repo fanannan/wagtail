@@ -1,6 +1,5 @@
 (ns wagtail.reader.death-rates
-  (:require [clatrix.core :as cl]
-            [wagtail.reader.iris :as iris]))
+  (:require [wagtail.reader.iris :as iris]))
 
 
 ;; (should be rewritten)
@@ -9,8 +8,8 @@
   (let [;records (shuffle records)
         num-records (count records)
         num-train (int (* num-records train-ratio))
-        features (map #(cl/matrix (rest (butlast %))) records),
-        labels (map last records)
+        features (map #(vec (rest (butlast %))) records),
+        labels (map #(vector (last %)) records)
         [train-features test-features] (iris/divide num-train features)
         [train-labels test-labels] (iris/divide num-train labels)]
     [[train-features, train-labels]

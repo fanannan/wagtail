@@ -10,22 +10,30 @@
 ; [train test]
 ; [[train-features train-labels stat] [test-features test-labels stat] ]
 
+(defn matrixize* [[features labels]]
+  [(map cl/matrix features)
+   (map first labels)]) ;takes only one label from a label vector
 
-(defn add-bias* [features]
-  (map #(cl/vstack (cl/matrix [1.0]) %) features))
+(defn matrixize [[train test stats]]
+  [(matrixize* train) (matrixize* test) stats])
 
-(defn add-bias [[features labels & [stats]]]
-  [(add-bias* features) labels stats])
+(defn add-bias* [[features labels]]
+  [(mapv #(cl/matrix (conj % 1.0)) features) labels])
+
+(defn add-bias [bias [train test stats]]
+  (if (nil? bias)
+    [train test stats]
+    [(add-bias* train) (add-bias* test) stats]))
 
 (defn apply-scale*
   [scale [feature-stats label-stat] [features labels]]
-  [(scale/scale (map cl/as-vec features) feature-stats (:method scale))
-   (map first (scale/scale (map vector labels) (vector label-stat) (:method scale)))])
+  [(scale/scale features feature-stats (:method scale))
+   (scale/scale labels label-stat (:method scale))])
 
 (defn apply-stat
   [[features labels] limit]
-  [(scale/stat (map cl/as-vec features) limit)
-   (first (scale/stat (map vector labels) limit))])
+  [(scale/stat features limit)
+   (scale/stat labels limit)])
 
 (defn apply-scale
   "Scale data sets.
@@ -39,7 +47,7 @@
        (apply-scale* scale stats test)
        stats])))
 
-(defn prepare-data*
+(defn read-data
   "Returns [[train-features train-labels] [test-features test-labels]]
    train-features and test-features: a vector of feature cl/matrix vrcyprs
    train-labels and test-labels: a vector of number (label value)"
@@ -51,7 +59,7 @@
 
 (defn prepare-data
   [{:keys [bias] :as config}, {:keys [scale] :as data}]
-  (let [[train test stats] (apply-scale scale (prepare-data* data))]
-    (if (true? bias)
-      [(add-bias train) (add-bias test) stats]
-      [train test stats])))
+  (->> (read-data data)
+       (apply-scale scale)
+       (add-bias bias)
+       (matrixize)))

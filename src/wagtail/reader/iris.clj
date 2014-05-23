@@ -1,5 +1,4 @@
-(ns wagtail.reader.iris
-  (:require [clatrix.core :as cl]))
+(ns wagtail.reader.iris)
 
 
 ;; (should be rewritten)
@@ -11,8 +10,8 @@
   (let [records (shuffle records)
         num-records (count records)
         num-train (int (* num-records train-ratio))
-        features (map #(cl/matrix (rest (butlast %))) records),
-        labels (map #(if (= target (last %)) 1 -1) records)
+        features (mapv #(vec (rest (butlast %))) records),
+        labels (mapv #(vector (if (= target (last %)) 1 -1)) records)
         [train-features test-features] (divide num-train features)
         [train-labels test-labels] (divide num-train labels)]
     [[train-features, train-labels]

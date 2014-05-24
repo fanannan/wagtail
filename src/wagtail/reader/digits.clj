@@ -14,9 +14,15 @@
       (assert (= (count labels) (count features)))
       [features labels])))
 
-(def train-digits (load-digits "./resources/digits_train.csv"))
-(def test-digits (load-digits "./resources/digits_test.csv"))
-(def data [train-digits test-digits])
+(def data
+  (let [[train-features train-labels] (load-digits "./resources/digits_train.csv")
+        [test-features test-labels] (load-digits "./resources/digits_test.csv")]
+    {:train
+     {:original-features train-features,
+      :original-labels train-labels},
+     :test
+     {:original-features test-features,
+      :original-labels test-labels}}))
 
 (defn prepare-digits [data]
   (:records data))

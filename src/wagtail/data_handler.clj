@@ -7,50 +7,54 @@
 
 
 ;; data handling functions (should be rewritten)
-; [train test]
-; [[train-features train-labels stat] [test-features test-labels stat] ]
 
-(defn matrixize* [[features labels]]
-  [(map cl/matrix features)
-   (map first labels)]) ;takes only one label from a label vector
+(defn matrixize* [{:keys [features labels] :as xys}]
+  {:features (map #(cl/matrix %) features)
+   :labels (map first labels)}) ;takes only one label from a label vector
 
-(defn matrixize [[train test stats]]
-  [(matrixize* train) (matrixize* test) stats])
+(defn matrixize [{:keys [train test stats] :as data-set}]
+  (into data-set
+        {:train (into train (matrixize* train))
+         :test (into test (matrixize* test))}))
 
-(defn add-bias* [[features labels]]
-  [(mapv #(cl/matrix (conj % 1.0)) features) labels])
+(defn add-bias* [{:keys [features] :as xys}]
+  (into xys
+        {:features (mapv #(cl/matrix (conj % 1.0)) features)}))
 
-(defn add-bias [bias [train test stats]]
+(defn add-bias [bias {:keys [train test stats] :as data-set}]
   (if (nil? bias)
-    [train test stats]
-    [(add-bias* train) (add-bias* test) stats]))
+    data-set
+    (into data-set
+          {:train (into train (add-bias* train))
+           :test (into test (add-bias* test))})))
 
 (defn apply-scale*
-  [scale [feature-stats label-stat] [features labels]]
-  [(scale/scale features feature-stats (:method scale))
-   (scale/scale labels label-stat (:method scale))])
+  [scale,
+   {:keys [feature-stats, label-stats] :as stats},
+   {:keys [original-features, original-labels]}]
+  {:features (scale/scale original-features feature-stats (:method scale))
+   :labels (scale/scale original-labels label-stats (:method scale))})
 
 (defn apply-stat
-  [[features labels] limit]
-  [(scale/stat features limit)
-   (scale/stat labels limit)])
+  [{:keys [original-features, original-labels]}, limit]
+  {:feature-stats (scale/stat original-features limit),
+   :label-stats (scale/stat original-labels limit)})
 
 (defn apply-scale
   "Scale data sets.
-   Returns the scaled train data, the scaled test data and the stats for scaling:
-   [[train-features train-labels] [test-features test-labels] [feature-stats label-stat]]"
-  [scale [train test]]
-  (if (nil? scale)
-    [train test nil]
-    (let [stats (apply-stat train (:limit scale))]
-      [(apply-scale* scale stats train)
-       (apply-scale* scale stats test)
-       stats])))
+   Returns the scaled train data, the scaled test data and the stats for scaling"
+  [scale data-map]
+  (let [stats (apply-stat (:train data-map) (:limit scale))]
+     {:train (into (:train data-map)
+                   (apply-scale* scale stats (:train data-map)))
+      :test  (into (:test data-map)
+                   (apply-scale* scale stats (:test data-map)))
+      :stats (if (nil? scale) nil stats)}))
 
 (defn read-data
-  "Returns [[train-features train-labels] [test-features test-labels]]
-   train-features and test-features: a vector of feature cl/matrix vrcyprs
-   train-labels and test-labels: a vector of number (label value)"
+  "Returns a map {:train {:original-features xs, :original-labels ys} :test ..}
+   train-features and test-features: a vector of feature vectors
+   train-labels and test-labels: a vector of label vectors"
   [{:keys [data-type] :as data}]
   (case data-type
         :iris (iris/prepare-iris data)

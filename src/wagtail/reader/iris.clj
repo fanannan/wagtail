@@ -14,8 +14,12 @@
         labels (mapv #(vector (if (= target (last %)) 1 -1)) records)
         [train-features test-features] (divide num-train features)
         [train-labels test-labels] (divide num-train labels)]
-    [[train-features, train-labels]
-     [test-features, test-labels]]))
+    {:train
+     {:original-features train-features,
+      :original-labels train-labels},
+     :test
+     {:original-features test-features,
+      :original-labels test-labels}}))
 
 ; Iris data set
 ; http://archive.ics.uci.edu/ml/datasets/Iris

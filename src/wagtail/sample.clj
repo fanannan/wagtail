@@ -104,11 +104,11 @@
 ;; run samples
 
 (defn run-samples []
+  #_(doall
+    (for [model [perceptron pa pa1 pa2 cw scw1 pegasos-svm];, logistic-reg];
+          data [iris-data digits-data]]
+      (performance/check-performance model data true)))
   (doall
-   (do
-     #_(for [model [perceptron pa pa1 pa2 cw scw1 pegasos-svm];, logistic-reg];
-           data [iris-data digits-data]]
-       (performance/check-performance model data true))
-     (for [model [linear-reg];, logistic-reg]; [pa-reg]
-           data [scaled-death-rate-data]]
-       (performance/check-performance model data true)))))
+    (for [model [linear-reg, pa-reg];, logistic-reg]; []
+          data [scaled-death-rate-data]]
+      (performance/check-performance model data true))))

@@ -83,8 +83,6 @@
    {:keys [iterations] :as variables},
    scaled-features, scaled-labels]
   (assert (validator-fn variables))
-  ; 回帰ならバイアス項を追加する
-  ;;
   (let [num-features (count (first scaled-features))
         initial-variables (initializer-fn config variables num-features)]
        (looper iterations

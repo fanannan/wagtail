@@ -3,6 +3,7 @@
 (binding [*warn-on-reflection* false]
   (use '[incanter.stats :only [quantile] :as stats]))
 
+
 (defn stat-item
  "Statistics info of the given number sequence.
   xs: number sequence
@@ -99,10 +100,3 @@
   [records, stat, method-key]
   {:pre [(every? vector? records)(every? map? stat)(keyword? method-key)]}
   (mapv #(scale-record % stat method-key) records))
-
-
-;(def x (stat (range 4000) 0.91))
-;(unscale-item (scale-item 3000 x :raw) x :raw)
-;(unscale-item (scale-item 3000 x :simple) x :simple)
-;(unscale-item (scale-item 3000 x :bounded) x :bounded)
-;(unscale-item (scale-item 3000 x :zero-bounded) x :zero-bounded)

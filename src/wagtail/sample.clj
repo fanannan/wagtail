@@ -25,13 +25,13 @@
 (def linear-reg
   {:model-name "Linear-Regression",
    :config linear-regression/linear-regression-config,
-   :variables {:learning-rate 0.1, :iterations 10000}})
+   :variables {:learning-rate 0.01, :iterations 2}})
 
 ; logistic regression
 (def logistic-reg
   {:model-name "Logistic-Regression",
    :config logistic-regression/logistic-regression-config,
-   :variables {:learning-rate 0.000000005, :iterations 500}})
+   :variables {:learning-rate 0.005, :iterations 500}})
 
 ; passive-agressive
 (def pa
@@ -52,7 +52,7 @@
 (def pa-reg
   {:model-name "PA-Regression",
    :config pa/pa-regression-config,
-   :variables {:epsiron 0.05, , :iterations 1}})
+   :variables {:epsiron 0.00025, :iterations 2}})
 
 ; confidence weighted
 (def cw
@@ -104,11 +104,11 @@
 ;; run samples
 
 (defn run-samples []
-  #_(doall
+  (doall
     (for [model [perceptron pa pa1 pa2 cw scw1 pegasos-svm];, logistic-reg];
           data [iris-data digits-data]]
       (performance/check-performance model data true)))
   (doall
-    (for [model [linear-reg, pa-reg];, logistic-reg]; []
+    (for [model [linear-reg, pa-reg]
           data [scaled-death-rate-data]]
       (performance/check-performance model data true))))

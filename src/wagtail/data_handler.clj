@@ -44,12 +44,20 @@
   "Scale data sets.
    Returns the scaled train data, the scaled test data and the stats for scaling"
   [scale data-map]
-  (let [stats (apply-stat (:train data-map) (:limit scale))]
-     {:train (into (:train data-map)
-                   (apply-scale* scale stats (:train data-map)))
-      :test  (into (:test data-map)
-                   (apply-scale* scale stats (:test data-map)))
-      :stats (if (nil? scale) nil stats)}))
+  (if (nil? scale)
+    {:train (into (:train data-map)
+                  {:features (:original-features (:train data-map))
+                   :labels (:original-labels (:train data-map))})
+     :test  (into (:test data-map)
+                  {:features (:original-features (:test data-map))
+                   :labels (:original-labels (:test data-map))})
+     :stats nil}
+    (let [stats (apply-stat (:train data-map) (:limit scale))]
+       {:train (into (:train data-map)
+                     (apply-scale* scale stats (:train data-map)))
+        :test  (into (:test data-map)
+                     (apply-scale* scale stats (:test data-map)))
+        :stats stats})))
 
 (defn read-data
   "Returns a map {:train {:original-features xs, :original-labels ys} :test ..}

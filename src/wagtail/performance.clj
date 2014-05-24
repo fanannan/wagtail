@@ -19,8 +19,8 @@
         predictions (map second results)]
     [results
      {:performance (float (/ (count (filter first results)) (count results)))
-      :correlation (wmath/correl predictions scaled-labels)
-      :mse (wmath/mse predictions scaled-labels)}]))
+      :correlation (wmath/correl predictions original-labels)
+      :mse (wmath/mse predictions original-labels)}]))
 
 (defn check-performance
   "Train and run a model with the specified model and data"
@@ -48,7 +48,7 @@
         :regression
         (do
           (println "train correlation: " (:correlation train-p))
-          (println "test  correlation: " (:corelation test-p))
+          (println "test  correlation: " (:correlation test-p))
           (println "train mse:         " (:mse train-p))
           (println "test  mse:         " (:mse test-p) "\n")))
       #_(println "train results:" train-r)

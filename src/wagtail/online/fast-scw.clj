@@ -1,4 +1,4 @@
-(ns wagtail.classifier.fast-scw
+(ns wagtail.online.fast-scw
   (:require [clatrix.core :as cl]
             [wagtail.math :as wm]))
 

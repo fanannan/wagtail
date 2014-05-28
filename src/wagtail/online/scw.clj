@@ -1,8 +1,8 @@
-(ns wagtail.classifier.scw
+(ns wagtail.online.scw
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
             [wagtail.math :as wmath]
-            [wagtail.classifier.cw :as cw]))
+            [wagtail.online.cw :as cw]))
 
 
 ;; soft confidence weighted learning

@@ -1,4 +1,4 @@
-(ns wagtail.classifier.linear-regression
+(ns wagtail.online.linear-regression
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
             [wagtail.math :as wmath]))

@@ -1,4 +1,4 @@
-(ns wagtail.classifier.cw
+(ns wagtail.online.cw
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]))
 
@@ -40,9 +40,8 @@
 
 (defn cw-initialzer
   [config, variables, num-fields]
-  (into variables
-        {:mu (cl/zeros num-fields),
-         :sigma (cl/eye num-fields)}))
+  (into (shared/weight-initialzer config variables num-fields)
+        {:sigma (cl/eye num-fields)}))
 
 (def cw-config
   {:model-type :classification,

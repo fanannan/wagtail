@@ -1,4 +1,4 @@
-(ns wagtail.classifier.pegasos-svm
+(ns wagtail.online.pegasos-svm
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]))
 

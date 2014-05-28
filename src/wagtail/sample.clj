@@ -1,14 +1,15 @@
 (ns wagtail.sample
   (:require [wagtail.shared :as shared]
             [wagtail.performance :as performance]
-            [wagtail.classifier.perceptron :as perceptron]
-            [wagtail.classifier.linear-regression :as linear-regression]
-            [wagtail.classifier.logistic-regression :as logistic-regression]
-            [wagtail.classifier.pa :as pa]
-            [wagtail.classifier.cw :as cw]
-            [wagtail.classifier.arow :as arow]
-            [wagtail.classifier.scw :as scw]
-            [wagtail.classifier.pegasos-svm :as pegasos-svm]
+            [wagtail.online.perceptron :as perceptron]
+            [wagtail.online.linear-regression :as linear-regression]
+            [wagtail.online.logistic-regression :as logistic-regression]
+            [wagtail.online.pa :as pa]
+            [wagtail.online.cw :as cw]
+            [wagtail.online.arow :as arow]
+            [wagtail.online.laser :as laser]
+            [wagtail.online.scw :as scw]
+            [wagtail.online.pegasos-svm :as pegasos-svm]
             [wagtail.reader.iris :as iris]
             [wagtail.reader.digits :as digits]
             [wagtail.reader.death-rates :as death-rates]))
@@ -53,7 +54,7 @@
 (def pa-reg
   {:model-name "PA-Regression",
    :config pa/pa-regression-config,
-   :variables {:epsiron 0.00025, :iterations 2}})
+   :variables {:epsiron 0.00005, :iterations 1}})
 
 ; confidence weighted
 (def cw
@@ -66,6 +67,12 @@
   {:model-name "AROW",
    :config arow/arow-config,
    :variables {:r 0.2, :iterations 1}})
+
+; LASER
+(def laser
+  {:model-name "LASER",
+   :config laser/laser-config,
+   :variables {:b 3.0, :c 3.2, :iterations 1}})
 
 ; soft confidence weighted
 (def scw1
@@ -116,6 +123,6 @@
           data [iris-data digits-data]]
       (performance/check-performance model data true)))
   (doall
-    (for [model [linear-reg, pa-reg]
+    (for [model [linear-reg, pa-reg, laser]
           data [scaled-death-rate-data]]
       (performance/check-performance model data true))))

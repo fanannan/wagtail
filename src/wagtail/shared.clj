@@ -95,16 +95,24 @@
 
 ;; execute a model
 
+(defn get-predict-fn
+  [config, variables]
+  (let [model-type (get config :model-type)
+        pf (get config :predict-fn)
+        w ((get config :weight-name) variables)]
+    (if (nil? pf)
+      (case model-type
+        :classification (partial classify w)
+        :regression (partial estimate w))
+      (partial pf config variables))))
+
 (defn run-model
   "Run a model and return the predictions.
    Returns a list with vectors of a feature and a prediction."
   [config, {:keys [method] :as scale}, label-stats, variables, scaled-features]
-  (let [w ((:weight-name config) variables)
-        us (if (nil? scale)
+  (let [us (if (nil? scale)
             identity
             (fn[value] (scale/unscale-item value (first label-stats) method)))
-        f (case (:model-type config)
-            :classification classify
-            :regression estimate)]
-    (map (fn[scaled-feature] [scaled-feature (us (f w scaled-feature))])
+        f (get-predict-fn config variables)]
+    (map (fn[scaled-feature] [scaled-feature (us (f scaled-feature))])
          scaled-features)))

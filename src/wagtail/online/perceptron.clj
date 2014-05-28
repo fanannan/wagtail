@@ -1,4 +1,4 @@
-(ns wagtail.classifier.perceptron
+(ns wagtail.online.perceptron
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]))
 

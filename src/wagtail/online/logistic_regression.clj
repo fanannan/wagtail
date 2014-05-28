@@ -1,4 +1,4 @@
-(ns wagtail.classifier.logistic-regression
+(ns wagtail.online.logistic-regression
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
             [wagtail.math :as wmath]))

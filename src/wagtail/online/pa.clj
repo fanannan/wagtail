@@ -1,4 +1,4 @@
-(ns wagtail.classifier.pa
+(ns wagtail.online.pa
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]))
 

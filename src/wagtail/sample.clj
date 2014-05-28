@@ -6,6 +6,7 @@
             [wagtail.classifier.logistic-regression :as logistic-regression]
             [wagtail.classifier.pa :as pa]
             [wagtail.classifier.cw :as cw]
+            [wagtail.classifier.arow :as arow]
             [wagtail.classifier.scw :as scw]
             [wagtail.classifier.pegasos-svm :as pegasos-svm]
             [wagtail.reader.iris :as iris]
@@ -60,6 +61,12 @@
    :config cw/cw-config,
    :variables {:r 0.2, :iterations 1}})
 
+; AROW
+(def arow
+  {:model-name "AROW",
+   :config arow/arow-config,
+   :variables {:r 0.2, :iterations 1}})
+
 ; soft confidence weighted
 (def scw1
   {:model-name "SCW-I",
@@ -105,7 +112,7 @@
 
 (defn run-samples []
   (doall
-    (for [model [perceptron pa pa1 pa2 cw scw1 pegasos-svm];, logistic-reg];
+    (for [model [perceptron pa pa1 pa2 cw arow scw1 pegasos-svm];, logistic-reg];
           data [iris-data digits-data]]
       (performance/check-performance model data true)))
   (doall

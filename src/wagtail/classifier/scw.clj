@@ -1,7 +1,8 @@
 (ns wagtail.classifier.scw
   (:require [clatrix.core :as cl]
             [wagtail.shared :as shared]
-            [wagtail.math :as wmath]))
+            [wagtail.math :as wmath]
+            [wagtail.classifier.cw :as cw]))
 
 
 ;; soft confidence weighted learning
@@ -18,12 +19,8 @@
   (let [p (calc-phi eta)]
     (+ 1.0 (* p p))))
 
-(defn confidence [sigma, feature] ;?_?
-  ; |WtXt|
-  (cl/get (cl/* (cl/t feature) sigma feature) 0 0))
-
 (defn calc-alpha-I [mu, sigma, phi, psi, zeta, c, feature, label]
-  (let [v (confidence sigma feature)
+  (let [v (cw/confidence sigma feature)
         m (shared/margin mu feature label)
         j (* m m phi phi phi phi 0.25)
         k (* v phi phi zeta)
@@ -32,7 +29,7 @@
     (min c (max 0.0 t))))
 
 (defn calc-beta [mu, sigma, alpha, phi, psi, zeta, feature, label]
-  (let [v (confidence sigma feature)
+  (let [v (cw/confidence sigma feature)
         m (shared/margin mu feature label)
         j (* -1 alpha v phi)
         k (Math/sqrt (+ (* (* alpha v phi)(* alpha v phi)) (* 4 v)))
@@ -40,18 +37,10 @@
     (/ (* alpha phi)
        (+ (Math/sqrt u)(* v alpha phi)))))
 
-(defn calc-next-mu [mu, sigma, alpha, feature, label]
-  ; μ＝μt+αtYtΣtXt
-  (cl/+ mu (cl/* alpha label sigma feature)))
-
-(defn calc-next-sigma [mu, sigma, beta, feature, label]
-  ; Σ＝Σt-βtΣtXtXt"Σt
-  (cl/- sigma (cl/* beta sigma feature (cl/t feature) sigma)))
-
 (defn calc-loss [config, {:keys [mu, sigma, phi] :as variables}, feature, label]
   ; max(0, φ√(X"ΣX)-YtWtXt)
   (max 0.0
-       (- (* phi (Math/sqrt (confidence sigma feature)))
+       (- (* phi (Math/sqrt (cw/confidence sigma feature)))
           (shared/margin mu feature label))))
 
 (defn scw-updater
@@ -61,8 +50,8 @@
   (let [alpha (alpha-fn mu sigma phi psi zeta c feature label)
         beta (calc-beta mu sigma alpha phi psi zeta feature label)]
     (into variables
-          {:mu (calc-next-mu mu sigma alpha feature label)
-           :sigma (calc-next-sigma mu sigma beta feature label)})))
+          {:mu (cw/calc-next-mu mu sigma alpha feature label)
+           :sigma (cw/calc-next-sigma mu sigma beta feature label)})))
 
 (defn scw-initialzer
   [config, {:keys [c, eta] :as variables}, num-fields]

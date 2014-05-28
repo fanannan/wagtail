@@ -1,18 +1,29 @@
 (ns wagtail.classifier.cw
   (:require [clatrix.core :as cl]
-            [wagtail.shared :as shared]
-            [wagtail.classifier.scw :as scw]))
+            [wagtail.shared :as shared]))
 
 
 ;; confidence weighted learning
 ;; base on "Confidence-Weighted Linear Classification" by M Dredze, Koby Crammmer and F Pereira, 2008
+
+(defn confidence [sigma, feature] ;?_?
+  ; |WtXt|
+  (cl/get (cl/* (cl/t feature) sigma feature) 0 0))
 
 (defn calc-alpha [mu, sigma, beta, feature, label]
   (let [t (- 1.0 (cl/get (cl/* label (cl/t feature) mu) 0 0))]
     (* (max 0.0 t) beta)))
 
 (defn calc-beta [sigma, r, feature]
-  (/ 1.0 (+ (scw/confidence sigma feature) r)))
+  (/ 1.0 (+ (confidence sigma feature) r)))
+
+(defn calc-next-mu [mu, sigma, alpha, feature, label]
+  ; μ＝μt+αtYtΣtXt
+  (cl/+ mu (cl/* alpha label sigma feature)))
+
+(defn calc-next-sigma [mu, sigma, beta, feature, label]
+  ; Σ＝Σt-βtΣtXtXt"Σt
+  (cl/- sigma (cl/* beta sigma feature (cl/t feature) sigma)))
 
 (defn calc-loss [config, {:keys [mu] :as variables}, feature, label]
   (if (pos? (shared/margin mu feature label)) 0 1))
@@ -24,8 +35,8 @@
   (let [beta (calc-beta sigma r feature)
         alpha (calc-alpha mu sigma beta feature label)]
     (into variables
-          {:mu (scw/calc-next-mu mu sigma alpha feature label)
-           :sigma (scw/calc-next-sigma mu sigma beta feature label)})))
+          {:mu (calc-next-mu mu sigma alpha feature label)
+           :sigma (calc-next-sigma mu sigma beta feature label)})))
 
 (defn cw-initialzer
   [config, variables, num-fields]

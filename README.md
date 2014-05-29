@@ -19,6 +19,9 @@ regression
 
  * Linear regression
  * PA regression
+ * AROWR
+ * AAR
+ * RLS
  * LASER
  * CR-RLS
 

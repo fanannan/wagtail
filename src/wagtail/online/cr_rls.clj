@@ -1,29 +1,34 @@
 (ns wagtail.online.cr-rls
   (:require [clatrix.core :as cl]
-            [wagtail.shared :as shared]))
+            [wagtail.shared :as shared]
+            [wagtail.online.cw :as cw]
+            [wagtail.online.arowr :as arowr]))
 
 
 ;; CR-RLS
 ;; based on "Second-Order Non-Stationary Online Learning for Regression" by N. Vaits, E. Moroshko and K. Crammer.
 
-(defn calc-loss [config, {:keys [mu, sigma] :as variables}, feature, label]
-  (- 1.0 (* (shared/margin mu feature label) label)))
-
 (defn cr-rls-updater
   [config,
-   {:keys [mu, sigma, r] :as variables},
+   {:keys [w, sigma, r, t, T, I] :as variables},
    feature, label]
-  (let [beta (cw/calc-beta sigma r feature)
-        alpha (cw/calc-alpha mu sigma beta feature label)]
-    (into variables
-          {:mu (cw/calc-next-mu mu sigma alpha feature label)
-           :sigma (cw/calc-next-sigma mu sigma beta feature label)})))
+  (into variables
+        {:w (arowr/calc-next-w w sigma r feature label)
+         :sigma (if (zero? (mod t T))
+                  I
+                  (arowr/calc-next-sigma sigma r 1 feature))
+         :t (inc t)}))
+
+(defn cr-rls-initialzer
+  [config, variables, num-fields]
+  (into (cw/cw-initialzer config variables num-fields)
+        {:I (cl/eye num-fields)
+         :t 1}))
 
 (def cr-rls-config
-  {:model-type :classification
+  {:model-type :regression
    :validator-fn (fn [{:keys [r, T, iterations]}]
-                   (and (> 1.0 r 0.0)(integer? T)(> iterations 0))),
+                   (and (> 1.0 r 0.0)(integer? T)(pos? T)(> iterations 0))),
    :initializer-fn cr-rls-initialzer,
    :updater-fn cr-rls-updater,
-   :loss-fn calc-loss,
-   :weight-name :mu})
+   :weight-name :w})

@@ -8,17 +8,13 @@
 ;; RLS
 ;; based on "Second-Order Non-Stationary Online Learning for Regression" by N. Vaits, E. Moroshko and K. Crammer.
 
-(defn calc-next-sigma
-  [sigma, r, feature]
-  (cl/i (cl/+ (cl/* r (cl/i sigma)) (cl/* feature (cl/t feature)))))
-
 (defn rls-updater
   [config,
    {:keys [w, sigma, r] :as variables},
    feature, label]
   (into variables
         {:w (arowr/calc-next-w w sigma r feature label)
-         :sigma (calc-next-sigma sigma r feature)}))
+         :sigma (arowr/calc-next-sigma sigma r 1 feature)}))
 
 (def rls-config
   {:model-type :regression

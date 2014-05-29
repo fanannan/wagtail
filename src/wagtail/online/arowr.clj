@@ -14,8 +14,8 @@
               (cl/* (- label (shared/estimate w feature)) sigma feature))))
 
 (defn calc-next-sigma
-  [sigma, r, feature]
-  (cl/i (cl/+ (cl/i sigma) (cl/* (/ 1.0 r) feature (cl/t feature)))))
+  [sigma, r1, r2, feature]
+  (cl/i (cl/+ (cl/* r1 (cl/i sigma)) (cl/* r2 feature (cl/t feature)))))
 
 (defn arowr-updater
   [config,
@@ -23,7 +23,7 @@
    feature, label]
   (into variables
         {:w (calc-next-w w sigma r feature label)
-         :sigma (calc-next-sigma sigma r feature)}))
+         :sigma (calc-next-sigma sigma 1 (/ 1.0 r) feature)}))
 
 (def arowr-config
   {:model-type :regression

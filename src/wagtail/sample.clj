@@ -9,8 +9,9 @@
             [wagtail.online.arow :as arow]
             [wagtail.online.arowr :as arowr]
             [wagtail.online.aar :as aar]
-            [wagtail.online.rls :as rls]
             [wagtail.online.laser :as laser]
+            [wagtail.online.rls :as rls]
+            [wagtail.online.cr-rls :as cr-rls]
             [wagtail.online.scw :as scw]
             [wagtail.online.pegasos-svm :as pegasos-svm]
             [wagtail.reader.iris :as iris]
@@ -90,17 +91,23 @@
    :config aar/aar-config,
    :variables {:b 1000, :iterations 1}})
 
-; RLS
-(def rls
-  {:model-name "RLS",
-   :config rls/rls-config,
-   :variables {:r 0.999999, :iterations 1}})
-
 ; LASER
 (def laser
   {:model-name "LASER",
    :config laser/laser-config,
    :variables {:b 3.0, :c 3000, :iterations 1}})
+
+; RLS
+(def rls
+  {:model-name "RLS",
+   :config rls/rls-config,
+   :variables {:r 0.999999, :iterations 10}})
+
+; CR-RLS
+(def cr-rls
+  {:model-name "CR-RLS",
+   :config cr-rls/cr-rls-config,
+   :variables {:r 0.999999, :T 100, :iterations 20}})
 
 ;; soft confidence weighted
 (def scw1
@@ -151,6 +158,6 @@
           data [iris-data digits-data]]
       (performance/check-performance model data true)))
   (doall
-    (for [model [linear-reg, pa-reg, arowr, aar, rls, laser]
+    (for [model [linear-reg, pa-reg, arowr, aar, laser, rls, cr-rls]
           data [scaled-death-rate-data]]
       (performance/check-performance model data true))))

@@ -1,6 +1,7 @@
 (ns wagtail.online.aar
   (:require [clatrix.core :as cl]
-            [wagtail.shared :as shared]))
+            [wagtail.shared :as shared]
+            [wagtail.online.arowr :as arowr]))
 
 
 ;; AAR
@@ -15,23 +16,13 @@
    feature]
    (/ (shared/estimate w feature) (divider sigma feature)))
 
-(defn calc-next-w
-  [w, sigma, feature, label]
-  (cl/+ w
-        (cl/* (/ 1.0 (divider sigma feature))
-              (cl/* (- label (shared/estimate w feature)) sigma feature))))
-
-(defn calc-next-sigma
-  [sigma, feature]
-  (cl/i (cl/+ (cl/i sigma) (cl/* feature (cl/t feature)))))
-
 (defn aar-updater
   [config,
    {:keys [w, sigma] :as variables},
    feature, label]
   (into variables
-        {:w (calc-next-w w sigma feature label)
-         :sigma (calc-next-sigma sigma feature)}))
+        {:w (arowr/calc-next-w w sigma 1 feature label)
+         :sigma (arowr/calc-next-sigma sigma 1 1 feature)}))
 
 (defn aar-initialzer
   [config, {:keys [b] :as variables}, num-fields]

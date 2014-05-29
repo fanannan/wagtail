@@ -7,6 +7,9 @@
             [wagtail.online.pa :as pa]
             [wagtail.online.cw :as cw]
             [wagtail.online.arow :as arow]
+            [wagtail.online.arowr :as arowr]
+            [wagtail.online.aar :as aar]
+            [wagtail.online.rls :as rls]
             [wagtail.online.laser :as laser]
             [wagtail.online.scw :as scw]
             [wagtail.online.pegasos-svm :as pegasos-svm]
@@ -15,25 +18,27 @@
             [wagtail.reader.death-rates :as death-rates]))
 
 
-;; sample definitions for classifier parameters
+;;; sample definitions for classifier parameters
 
-; margin perceptron
+;; margin perceptron
 (def perceptron
   {:model-name "Perceptron"
    :config perceptron/perceptron-config,
    :variables {:threshold 0.2, :learning-rate 0.01, :iterations 100}})
 
-; linear regression
+;; linear regression
 (def linear-reg
   {:model-name "Linear-Regression",
    :config linear-regression/linear-regression-config,
    :variables {:learning-rate 0.01, :iterations 2}})
 
-; logistic regression
+;; logistic regression
 (def logistic-reg
   {:model-name "Logistic-Regression",
    :config logistic-regression/logistic-regression-config,
    :variables {:learning-rate 0.005, :iterations 500}})
+
+;; passive-agressive family
 
 ; passive-agressive
 (def pa
@@ -41,26 +46,31 @@
    :config pa/pa-classifier-config,
    :variables {:iterations 1}})
 
+; passive-agressive I
 (def pa1
   {:model-name "PA-I",
    :config pa/pa1-classifier-config,
    :variables {:c 0.8, :iterations 1}})
 
+; passive-agressive II
 (def pa2
   {:model-name "PA-II",
    :config pa/pa2-classifier-config,
    :variables {:c 0.8, :iterations 1}})
 
+; passive-agressive regression
 (def pa-reg
   {:model-name "PA-Regression",
    :config pa/pa-regression-config,
    :variables {:epsiron 0.00005, :iterations 1}})
 
-; confidence weighted
+;; confidence weighted
 (def cw
   {:model-name "CW",
    :config cw/cw-config,
    :variables {:r 0.2, :iterations 1}})
+
+;; AROW family
 
 ; AROW
 (def arow
@@ -68,19 +78,37 @@
    :config arow/arow-config,
    :variables {:r 0.2, :iterations 1}})
 
+; AROWR
+(def arowr
+  {:model-name "AROWR",
+   :config arowr/arowr-config,
+   :variables {:r 1000, :iterations 1}})
+
+; AAR
+(def aar
+  {:model-name "AAR",
+   :config aar/aar-config,
+   :variables {:b 1000, :iterations 1}})
+
+; RLS
+(def rls
+  {:model-name "RLS",
+   :config rls/rls-config,
+   :variables {:r 0.999999, :iterations 1}})
+
 ; LASER
 (def laser
   {:model-name "LASER",
    :config laser/laser-config,
-   :variables {:b 3.0, :c 3.2, :iterations 1}})
+   :variables {:b 3.0, :c 3000, :iterations 1}})
 
-; soft confidence weighted
+;; soft confidence weighted
 (def scw1
   {:model-name "SCW-I",
    :config scw/scw1-config,
    :variables {:c 1.0, :eta 0.9, :iterations 1}})
 
-; pegasos svm
+;; pegasos svm
 (def pegasos-svm
   {:model-name "Pegasos-I",
    :config pegasos-svm/pegasos-svm-config,
@@ -123,6 +151,6 @@
           data [iris-data digits-data]]
       (performance/check-performance model data true)))
   (doall
-    (for [model [linear-reg, pa-reg, laser]
+    (for [model [linear-reg, pa-reg, arowr, aar, rls, laser]
           data [scaled-death-rate-data]]
       (performance/check-performance model data true))))

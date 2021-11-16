@@ -6,7 +6,7 @@ Experimental online classifiers implemented in Clojure.
 
 The following online algorithms are implenteed under the same framework.
 
-classification
+classification models
 
  * Margin perceptron
  * Passive agressive/I/II
@@ -15,7 +15,7 @@ classification
  * Soft confidence-weighted I
  * Pegasos SVM
 
-regression
+regression models
 
  * Linear regression
  * PA regression
